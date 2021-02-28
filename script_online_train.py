@@ -26,7 +26,7 @@ if __name__ == '__main__':
     opts = Options().opts 
     
     # finetuning only
-    '''opts.dataset_tag = 'kitti'
+    opts.dataset_tag = 'kitti'
     print('Current dataset: kitti')
     opts.save_model_dir = 'trained_models/online_models_kitti/'
     opts.apply_replay = False 
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     opts.apply_mem_reg = False 
     opts.apply_adaptation = False
     clear_directories(opts)
-    OnlineTrain(opts)'''
+    OnlineTrain(opts)
     
     runs = opts.runs
     for run_id in runs:

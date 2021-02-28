@@ -19,9 +19,7 @@ if __name__ == '__main__':
         list_results_dir_kitti.append('results/rep_reg_online_test_loss_run' + run + '/kitti_online/')
         list_results_dir_vkitti.append('results/rep_reg_online_test_loss_run' + run + '/vkitti_online/')
     
-    for i in range(len(list_eval_dir_kitti)):
-        if i == 0:
-            continue 
+    for i in range(len(list_eval_dir_kitti)): 
         st_time = time.time()                       
         opts.eval_dir_kitti = list_eval_dir_kitti[i]
         opts.eval_dir_vkitti = list_eval_dir_vkitti[i]

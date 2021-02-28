@@ -59,11 +59,6 @@ def get_mean_std_ft(res):
         res_std[key] = 0
     return list(res_mean.values()), list(res_std.values())
 
-def display_latex_style(arr):
-    df = pd.DataFrame(arr)
-    print(df.to_latex(float_format="%0.4f"))
-
-
 def display_latex_style_w_std(mean, std):
     h = len(mean)
     w = len(mean[0])
@@ -131,6 +126,5 @@ if __name__ == '__main__':
         std_arr.append(std)
         
         print('Results for {}'.format(curr_metric))
-        # display_latex_style(mean_arr)
         display_latex_style_w_std(mean_arr, std_arr)
     print('Finished')
