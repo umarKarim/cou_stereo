@@ -54,8 +54,8 @@ The Absolute Relative metric is shown in the following table.
 | -------------- | ------------ | ------------ | -------------- | ------------- |-------|
 KITTI | Fine-tuning | 0.3638 | 0.4606 | 0.2868 | 0.3223 |
 KITTI | Proposed | 0.2407 | 0.2375 | 0.2362 | 0.2225 |
-vKITTI | Fine-tuning | 0.2526 | 0.2783 | 0.2406 | 0.2549 |
-vKITTI | Proposed | 0.2328 | 0.2365 | 0.2334 | 0.2375 |
+VKITTI | Fine-tuning | 0.2526 | 0.2783 | 0.2406 | 0.2549 |
+VKITTI | Proposed | 0.2328 | 0.2365 | 0.2334 | 0.2375 |
 
 See the following figure for comparison.
 
