@@ -59,7 +59,7 @@ vKITTI | Proposed | 0.2328 | 0.2365 | 0.2334 | 0.2375 |
 
 See the following figure for comparison.
 
-![figs directory](https://github.com/umarKarim/cou_stereo/figs/kitti_vkitti_qual_crop.jpg)
+![figs directory](https://github.com/umarKarim/cou_stereo/blob/main/figs/kitti_vkitti_qual_crop.jpg)
 
 
 
