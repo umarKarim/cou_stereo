@@ -46,7 +46,23 @@ python script_evaluate.py
 Results will be displayed in the console.
 
 ## Results 
-Quantitative results are mentioned in the manuscript. Check the following [video](https://www.youtube.com/watch?v=_WNYOTDaCCM&t=10s&ab_channel=Depth) for qualitative results. 
+Check this [video](https://www.youtube.com/watch?v=_WNYOTDaCCM&t=10s&ab_channel=Depth) for qualitative results.
+
+The Absolute Relative metric is shown in the following table.
+
+| Training Dataset | Approach | Current Dataset | Cross Dataset | Curr Domain | Cross Domain |
+| -------------- | ------------ | ------------ | -------------- | ------------- |-------|
+KITTI | Fine-tuning | 0.3638 | 0.4606 | 0.2868 | 0.3223 |
+KITTI | Proposed | 0.2407 | 0.2375 | 0.2362 | 0.2225 |
+vKITTI | Fine-tuning | 0.2526 | 0.2783 | 0.2406 | 0.2549 |
+vKITTI | Proposed | 0.2328 | 0.2365 | 0.2334 | 0.2375 |
+
+See the following figure for comparison.
+
+![figs directory](https://github.com/umarKarim/cou_stereo/figs/kitti_vkitti_qual_crop.jpg)
+
+
+
 
 
 
