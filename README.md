@@ -1,6 +1,10 @@
 # Towards Continual, Online, Unsupervised Depth  
 ## Introduction 
-This is the source code for the paper **Towards Continual, Online, Unsupervised Depth**. This code is for stereo-based depth estimation. The SfM-based depth estimation is also available. 
+This is the source code for the paper **Towards Continual, Online, Unsupervised Depth**. This code is for stereo-based depth estimation. 
+
+Manuscript is available [here](https://arxiv.org/abs/2103.00369).
+
+The SfM-based depth estimation is also available at [here](https://github.com/umarKarim/cou_sfm). 
 
 ## Requirements 
 - PyTorch 
