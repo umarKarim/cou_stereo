@@ -83,15 +83,28 @@ class TestFaster():
                 flags += flag 
                 for key in batch_data.keys():
                     batch_data[key] = batch_data[key].to(self.device)
+                # print(batch_data.keys())
                 batch_data['left_im'] = F.interpolate(batch_data['left_im'], self.frame_size,
                                                          mode='bilinear')
+                batch_data['right_im'] = F.interpolate(batch_data['right_im'], self.frame_size, 
+                                                       mode='bilinear')
+                out_disp = self.DispNet(batch_data['left_im'], batch_data['right_im'])
+                '''
                 out_depth = 1.0 / self.DispNet(batch_data['left_im'])
-                out_depth = out_depth.squeeze(1)
-                gt = batch_data['gt']
-                
+                out_depth = out_depth.squeeze(1)'''
+                if self.dataset_tag == 'kitti':
+                    gt = batch_data['gt']
+                else:
+                    gt = batch_data['gt'] / 100.0
+                # disparity is between 0 and 1. 1 corresponds to maximum, i.e., image width 
+                # Following to convert to groud truth scale 
+                out_disp = out_disp * gt.size(-1) / out_disp.size(-1)
+                # For some stupid reason, the disparity is multiplied by 2 in the warper by me 
+                # following multiplication by 2 is to offset the effect 
+                out_depth = 2 * 0.54 / out_disp 
                 if self.qual_results:
                     self.save_result(i, batch_data, out_depth)
-                
+                out_depth = out_depth.squeeze(1)
                 out_depth = self.resize_depth(gt, out_depth)
                 gt = self.crop_eigen(gt)
                 out_depth = self.crop_eigen(out_depth)
@@ -102,11 +115,14 @@ class TestFaster():
     
     def resize_depth(self, gt, depth):
         _, gt_h, gt_w = gt.size()
-        disp = 1.0 / (depth + 1e-6)
-        disp = disp.unsqueeze(1)
+        # disp = 1.0 / (depth + 1e-6)
+        depth = depth.unsqueeze(1)
+        depth = F.interpolate(depth, (gt_h, gt_w), mode='bilinear')
+        depth_out = depth.squeeze(1)
+        '''disp = disp.unsqueeze(1)
         disp = F.interpolate(disp, (gt_h, gt_w), mode='bilinear')
         disp = disp.squeeze(1)
-        depth_out = 1 / (disp + 1e-6)
+        depth_out = 1 / (disp + 1e-6)'''
         return depth_out 
     
     def crop_eigen(self, in_im):
@@ -142,9 +158,10 @@ class TestFaster():
             mask = (curr_gt > self.min_depth) * (curr_gt < self.max_depth)
             nz_depth = curr_depth[mask]
             nz_gt = curr_gt[mask] 
-            depth_med = torch.median(nz_depth)
+            '''depth_med = torch.median(nz_depth)
             gt_med = torch.median(nz_gt)
-            scale = gt_med / (1.0 * depth_med) 
+            scale = gt_med / (1.0 * depth_med) '''
+            scale = 1.0
             
             rmse = torch.sqrt(((nz_gt - scale * nz_depth) ** 2).mean())
             abs_rel = (torch.abs(nz_gt - scale * nz_depth) / nz_gt).mean() 
@@ -178,7 +195,7 @@ class TestFaster():
             depth = 1.0 / depth
             depth_3 = self.gray2jet(depth)
             torchvision.utils.save_image(depth_3, curr_im_name)
-    
+            
     def gray2jet(self, dmap):
         cmap = plt.get_cmap('magma')
         if len(dmap.size()) == 4:

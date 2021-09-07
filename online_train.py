@@ -113,7 +113,7 @@ class OnlineTrain():
             in_data['right_im'] = F.interpolate(in_data['right_im'], size= self.frame_size, 
                                                     mode='bilinear')
             
-            out_disp = self.DispModel(in_data['left_im'])
+            out_disp = self.DispModel(in_data['left_im'], in_data['right_im'])
             out_disp = out_disp.squeeze(1)
             self.optim.zero_grad()
             losses, net_loss = self.Loss(in_data, out_disp)

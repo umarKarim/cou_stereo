@@ -3,7 +3,7 @@ import os
 from online_train import OnlineTrain 
 from dir_options.online_train_options import Options 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="3"
+
 
 def clear_directories(opts):
     if not os.path.exists(opts.save_model_dir):
@@ -31,7 +31,6 @@ if __name__ == '__main__':
     opts.save_model_dir = 'trained_models/online_models_kitti/'
     opts.apply_replay = False 
     opts.apply_mem_reg = False 
-    opts.apply_adaptation = False
     clear_directories(opts)
     OnlineTrain(opts)
     
@@ -40,7 +39,6 @@ if __name__ == '__main__':
     opts.save_model_dir = 'trained_models/online_models_vkitti/'
     opts.apply_replay = False 
     opts.apply_mem_reg = False 
-    opts.apply_adaptation = False
     clear_directories(opts)
     OnlineTrain(opts)
     
@@ -53,7 +51,6 @@ if __name__ == '__main__':
         opts.int_results_dir = 'qual_dmaps/int_results_run' + run_id + '/'
         opts.apply_replay = True 
         opts.apply_mem_reg = True 
-        opts.apply_adaptation = False
         clear_directories(opts)
         OnlineTrain(opts)
         
@@ -64,7 +61,6 @@ if __name__ == '__main__':
         opts.int_results_dir = 'qual_dmaps/int_results' + run_id + '/'
         opts.apply_replay = True 
         opts.apply_mem_reg = True 
-        opts.apply_adaptation = False
         clear_directories(opts)
         OnlineTrain(opts)    
         

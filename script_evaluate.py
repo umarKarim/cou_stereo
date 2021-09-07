@@ -12,13 +12,7 @@ def correct_results(results, opts):
     cross_dist_res = results['cross_dist']
     cross_domain_res = np.mean((results['pretrain_domain'], results['cross_domain']))
     online_res = results['online_adaptation_res']
-    if eval_metric == 'rmse' or eval_metric == 'sq_rel':
-        if tag == 'kitti':
-            cross_dist_res /= 100.0
-        else:
-            curr_dist_res /= 100.0
-            cross_domain_res /= 100.0
-            online_res /= 100.0
+
     res_dict = {'Curr dist': curr_dist_res,
                 'Cross_dist': cross_dist_res,
                 'Online': online_res,

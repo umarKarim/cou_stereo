@@ -72,7 +72,7 @@ class PreTrain():
                 for key in in_data.keys():
                     in_data[key] = in_data[key].to(self.device)
                     in_data[key] = F.interpolate(in_data[key], self.frame_size, mode='bilinear') 
-                out_disp = self.DispModel(in_data['left_im'])
+                out_disp = self.DispModel(in_data['left_im'], in_data['right_im'])
                 out_disp = out_disp.squeeze(1)
                 losses, net_loss = self.Loss(in_data, out_disp)
                 self.optim.zero_grad()

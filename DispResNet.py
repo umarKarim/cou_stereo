@@ -106,13 +106,14 @@ class DispResNet(nn.Module):
 
     def __init__(self, num_layers = 18, pretrained = True):
         super(DispResNet, self).__init__()
-        self.encoder = ResnetEncoder(num_layers = num_layers, pretrained = pretrained, num_input_images=1)
+        self.encoder = ResnetEncoder(num_layers = num_layers, pretrained = pretrained, num_input_images=2)
         self.decoder = DepthDecoder(self.encoder.num_ch_enc)
 
     def init_weights(self):
         pass
 
-    def forward(self, x):
+    def forward(self, left_im, right_im):
+        x = torch.cat((left_im, right_im), dim=1)
         features = self.encoder(x)
         outputs = self.decoder(features)
         
