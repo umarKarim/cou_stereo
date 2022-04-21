@@ -21,7 +21,8 @@ class TestFaster():
         self.frame_size = opts.frame_size
         self.model_path = opts.model_path 
         self.gpu_id = opts.gpu_id 
-        self.disp_module = opts.disp_module
+        # self.disp_module = opts.disp_module
+        self.network = opts.network 
         self.batch_size = opts.batch_size
         self.min_depth = opts.min_depth
         self.qual_results = opts.qual_results 
@@ -37,7 +38,7 @@ class TestFaster():
             else:
                 raise NameError('Dataset not found')
             self.DataLoader = data.DataLoader(dataset, batch_size=self.batch_size, shuffle=False, 
-                                            num_workers=16)
+                                            num_workers=8)
         else:
             self.DataLoader = dataloader
             
@@ -50,8 +51,17 @@ class TestFaster():
         os.makedirs(self.output_dir, exist_ok=True)
         
         # loading the model 
-        disp_module = importlib.import_module(self.disp_module)
-        self.DispNet = disp_module.DispResNet()
+        # disp_module = importlib.import_module(self.disp_module)
+        # self.DispNet = disp_module.DispResNet()
+        if self.network == 'sfml':
+            from sfmlDispNet import DispResNet
+            self.DispNet = DispResNet()
+        elif self.network == 'diffnet':
+            from diffDispNet import DispNet 
+            self.DispNet = DispNet()
+        else:
+            raise ValueError('Wrong network type')
+
         self.DispNet.load_state_dict(torch.load(self.model_path))
         if self.gpu_id is not None:
             self.device = torch.device('cuda:' + str(self.gpu_id[0]))
@@ -101,7 +111,7 @@ class TestFaster():
                 out_disp = out_disp * gt.size(-1) / out_disp.size(-1)
                 # For some stupid reason, the disparity is multiplied by 2 in the warper by me 
                 # following multiplication by 2 is to offset the effect 
-                out_depth = 2 * 0.54 / out_disp 
+                out_depth = 2 * 0.54 / out_disp
                 if self.qual_results:
                     self.save_result(i, batch_data, out_depth)
                 out_depth = out_depth.squeeze(1)
@@ -157,13 +167,16 @@ class TestFaster():
             curr_gt = gt[b, :, :]
             mask = (curr_gt > self.min_depth) * (curr_gt < self.max_depth)
             nz_depth = curr_depth[mask]
-            nz_gt = curr_gt[mask] 
+            nz_gt = curr_gt[mask]
+            # print(nz_depth.min(), nz_depth.max(), nz_depth.mean())
+            # print(nz_gt.min(), nz_gt.max(), nz_gt.mean()) 
             '''depth_med = torch.median(nz_depth)
             gt_med = torch.median(nz_gt)
-            scale = gt_med / (1.0 * depth_med) '''
+            scale = gt_med / (1.0 * depth_med)'''
             scale = 1.0
             
             rmse = torch.sqrt(((nz_gt - scale * nz_depth) ** 2).mean())
+            # print(rmse)
             abs_rel = (torch.abs(nz_gt - scale * nz_depth) / nz_gt).mean() 
             sq_rel = ((nz_gt - scale * nz_depth) ** 2 / nz_gt).mean()
             log_rmse = torch.sqrt(((torch.log(1.0 * scale * nz_depth) - torch.log(1.0 * nz_gt)) ** 2).mean())

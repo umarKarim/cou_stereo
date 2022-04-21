@@ -27,11 +27,11 @@ class EvalDirectory():
         kitti_dataset = Datasets.KittiTestDataset(self.opts)
         vkitti_dataset = Datasets.VkittiTestDataset(self.opts)
         self.KittiDataLoader = data.DataLoader(kitti_dataset, batch_size=self.batch_size, shuffle=False, 
-                                            num_workers=16, pin_memory=True)
+                                            num_workers=8, pin_memory=True)
         self.VkittiDataLoader = data.DataLoader(vkitti_dataset, batch_size=self.batch_size, shuffle=False, 
-                                             num_workers=16, pin_memory=True)
+                                             num_workers=8, pin_memory=True)
         # the models to test 
-        self.model_names = sorted([self.eval_dir + x for x in os.listdir(self.eval_dir) if 'Disp' in x])
+        self.model_names = [sorted([self.eval_dir + x for x in os.listdir(self.eval_dir) if 'Disp' in x])[-1]]
         
         results_dict = self.eval_kitti()
         f_name = self.results_dir + self.dataset_tag + 'train_kittitest_online.npy'

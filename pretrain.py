@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os 
 import time 
+import torch.utils.tensorboard as tb 
 
 from dir_dataset import Datasets 
 from Loss import Loss 
@@ -27,9 +28,13 @@ class PreTrain():
         self.beta2 = opts.beta2
         self.console_out = opts.console_out 
         self.save_disp = opts.save_disp 
-        self.disp_module = opts.disp_module 
+        # self.disp_module = opts.disp_module 
+        self.network = opts.network 
         self.gpus = opts.gpus  
-        self.int_result_dir = opts.int_results_dir 
+        self.int_result_dir = opts.int_results_dir
+        self.tboard_out = opts.tboard_out 
+        self.log_tb = opts.log_tensorboard 
+        self.tboard_dir = opts.tboard_dir 
         self.save_model_dir = opts.save_model_dir 
         self.save_model_iter = opts.save_model_iter 
         self.frame_size = opts.frame_size
@@ -52,14 +57,26 @@ class PreTrain():
             self.device = torch.device('cpu')
         else:
             self.device = torch.device('cuda:' + str(self.gpus[0]))
-        disp_module = importlib.import_module(self.disp_module)
-        self.DispModel = disp_module.DispResNet().to(self.device)
+        # disp_module = importlib.import_module(self.disp_module)
+        # self.DispModel = disp_module.DispResNet().to(self.device)
+        if self.network == 'sfml':
+            from sfmlDispNet import DispResNet
+            self.DispModel = DispResNet().to(self.device)
+        elif self.network == 'diffnet':
+            from diffDispNet import DispNet 
+            self.DispModel = DispNet().to(self.device)
+        else:
+            raise ValueError('Wrong network type')
+
         if self.disp_model_path is not None:
             self.DispModel.load_state_dict(torch.load(self.disp_model_path))
         if len(self.gpus) != 0:
             self.DispModel = nn.DataParallel(self.DispModel, self.gpus)
         self.DispModel.to(self.device)
         self.Loss = Loss(opts)
+
+        # data logger and output
+        self.writer = tb.SummaryWriter(self.tboard_dir)
 
         # the optimizer 
         self.optim = torch.optim.Adam(self.DispModel.parameters(), lr=self.lr, betas=[self.beta1, self.beta2])
@@ -80,8 +97,12 @@ class PreTrain():
                 self.optim.step() 
 
                 self.console_display(epoch, i, losses)
-                int_disp = self.save_int_result(epoch, i, out_disp, in_data)
+                int_disp_, left_im_ = self.save_int_result(epoch, i, out_disp, in_data)
+                if int_disp_ is not None:
+                    int_disp = int_disp_
+                    left_im = left_im_
                 self.save_model(epoch, i) 
+                self.save_tboard(epoch, i, losses, int_disp, left_im)
 
     def console_display(self, epoch, i, losses):
         if i % self.console_out == 0:
@@ -110,7 +131,19 @@ class PreTrain():
                 im_name = self.int_result_dir + ep_str + iter_str + '.png'
                 vutils.save_image(comb_im, im_name)
             print('Intermediate result saved')
-            return disp
+            return disp, left_im
+        else:
+            return None, None 
+
+    def save_tboard(self, epoch, i, losses, int_disp, left_im):
+        global_step = epoch * len(self.DataLoader) + i
+        if i % self.tboard_out == 0 and self.log_tb:
+            for key, loss in losses.items():
+                self.writer.add_scalar('Loss' + key, loss, global_step)
+            self.writer.add_image('Disparity', int_disp, global_step)
+            left_im = torch.unsqueeze(left_im, 0)
+            left_im = (left_im - left_im.min()) / (left_im.max() - left_im.min())
+            self.writer.add_images('Input', left_im, global_step)
     
     def from1ch23ch(self, im):
         assert len(im.size()) == 4

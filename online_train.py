@@ -31,9 +31,10 @@ class OnlineTrain():
         self.beta2 = opts.beta2
         self.console_out = opts.console_out 
         self.save_disp = opts.save_disp  
-        self.disp_module = opts.disp_module 
+        # self.disp_module = opts.disp_module 
         self.gpus = opts.gpus  
-        
+        self.network = opts.network 
+
         # replay related options 
         self.apply_replay = opts.apply_replay
         self.replay_left_dir = opts.replay_left_dir 
@@ -79,8 +80,17 @@ class OnlineTrain():
             self.device = torch.device('cpu')
         else:
             self.device = torch.device('cuda:' + str(self.gpus[0]))
-        disp_module = importlib.import_module(self.disp_module)
-        self.DispModel = disp_module.DispResNet().to(self.device)
+        # disp_module = importlib.import_module(self.disp_module)
+        # self.DispModel = disp_module.DispResNet().to(self.device)
+        if self.network == 'sfml':
+            from sfmlDispNet import DispResNet
+            self.DispModel = DispResNet().to(self.device)
+        elif self.network == 'diffnet':
+            from diffDispNet import DispNet 
+            self.DispModel = DispNet().to(self.device)
+        else:
+            raise ValueError('Wrong network type')
+
         if self.disp_model_path is not None:
             self.DispModel.load_state_dict(torch.load(self.disp_model_path, map_location='cpu'))
         
@@ -134,7 +144,7 @@ class OnlineTrain():
 
             self.console_display(epoch, i, losses)
             self.save_int_result(epoch, i, out_disp, in_data)
-            self.save_model(epoch, i, flag) 
+            # self.save_model(epoch, i, flag) 
             self.replay_buffer(in_data, net_loss, replay_flag)
             self.update_replay_params(net_loss)
             if self.prev_flag != flag[0]:
@@ -179,6 +189,7 @@ class OnlineTrain():
             print(loss_list)
             print('Estimated mean: {}, estimated variance: {}'.format(self.train_loss_mean, 
                                                                       self.train_loss_var))
+            print('------------------------')
             
     def save_int_result(self, epoch, i, out_disp, in_data):
         if i % self.save_disp == 0 and self.int_result_dir is not None:

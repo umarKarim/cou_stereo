@@ -151,10 +151,18 @@ class KittiTestDataset():
         self.transforms = transforms.Compose(self.list_transforms)
         
         # gathering the left and right images 
-        left_dir = self.kitti_test_dir + '/color/'
+        '''left_dir = self.kitti_test_dir + '/color/'
+        self.left_ims = [left_dir + x for x in os.listdir(left_dir) if x.endswith('.png') \
+            or x.endswith('.jpg')]
+        self.left_ims = sorted(self.left_ims)'''
+        left_dir = self.kitti_test_dir + 'left/'
         self.left_ims = [left_dir + x for x in os.listdir(left_dir) if x.endswith('.png') \
             or x.endswith('.jpg')]
         self.left_ims = sorted(self.left_ims)
+        right_dir = self.kitti_test_dir + 'right/'
+        self.right_ims = [right_dir + x for x in os.listdir(right_dir) if x.endswith('.png') \
+            or x.endswith('.jpg')]
+        self.right_ims = sorted(self.right_ims)
 
         # gathering the gt ims 
         self.gt_ims = sorted([self.kitti_gt_dir + x for x in os.listdir(self.kitti_gt_dir) if x.endswith('.npy')])
@@ -181,19 +189,22 @@ class KittiTestDataset():
                         break 
                 
         tot_left = len(self.left_ims)
+        tot_right = len(self.right_ims)
         tot_gt = len(self.gt_ims)
         tot_flags = len(self.flags)
-        assert tot_left == tot_gt == tot_flags, 'Right: {}, left: {}, gt: {}'.format(tot_left, tot_gt, tot_flags)      
+        assert tot_left == tot_right == tot_gt == tot_flags, 'Right: {}, left: {}, gt: {}, flags: {}'.format(tot_right, tot_left, tot_gt, tot_flags)      
       
     def __len__(self):
         return len(self.left_ims)
 
     def __getitem__(self, i):
         left_im = self.transforms(Image.open(self.left_ims[i]))
+        right_im = self.transforms(Image.open(self.right_ims[i]))
         gt = torch.tensor(np.load(self.gt_ims[i], allow_pickle=True))
         flag = self.flags[i]
         
         return {'left_im': left_im,
+                'right_im': right_im,
                 'gt': gt}, flag
 
 
@@ -335,12 +346,14 @@ class VkittiTestDataset():
 
         # gathering the test frames 
         self.left_ims = []
+        self.right_ims = []
         self.flags = []
         self.opts.gt_frames = False 
         for cat in self.test_cats:
             self.opts.cat = cat  
             CatDataset = VkittiCategoryDataset(self.opts)
             self.left_ims += CatDataset.left_ims
+            self.right_ims += CatDataset.right_ims
             self.flags += [cat] * len(CatDataset.right_ims)
         # gathering the gt frames 
         self.left_gt = []
@@ -351,19 +364,22 @@ class VkittiTestDataset():
             self.left_gt += CatDataset.left_ims
             
         tot_left = len(self.left_ims)
+        tot_right = len(self.right_ims)
         tot_gt_l = len(self.left_gt)
         
         # assert tot_left == tot_right, 'Different number of left and right images'
-        assert tot_left == tot_gt_l, 'Check number of left gt frames'
+        assert tot_left == tot_right == tot_gt_l, 'Check number of left gt frames'
         
     def __len__(self):
         return len(self.left_ims)
 
     def __getitem__(self, i):
         left_im = self.transforms(Image.open(self.left_ims[i]))
+        right_im = self.transforms(Image.open(self.right_ims[i]))
         gt = torch.tensor(np.array(Image.open(self.left_gt[i])))
         flag = self.flags[i]    
         return {'left_im': left_im,
+                'right_im': right_im,
                 'gt': gt}, flag
 
 
@@ -399,6 +415,7 @@ class ReplayOnlineDataset():
         self.replay_right_dir = opts.replay_right_dir
         self.dataset_tag = opts.dataset_tag 
         self.apply_replay = opts.apply_replay
+        self.comoda = opts.comoda 
         
         self.list_transforms = [transforms.ToTensor(), transforms.Normalize([0.45, 0.45, 0.45],
                                                                             [0.225, 0.225, 0.225])]
@@ -417,6 +434,7 @@ class ReplayOnlineDataset():
             self.replay_pretrain_toss = np.random.rand(self.dataset_len)
             pretrain_len = len(self.PretrainDataset)
             replay_len = opts.max_replay_frames 
+            self.max_pretrain_frames = pretrain_len
             self.pretrain_inds = (np.random.rand(self.dataset_len) * pretrain_len).astype(np.int)
             self.replay_inds = (np.random.rand(self.dataset_len) * replay_len).astype(np.int)
         
@@ -427,20 +445,34 @@ class ReplayOnlineDataset():
         flag = self.OnlineDataset.flags[i]
         # choice between replay or online 
         if self.apply_replay:
-            if self.replay_online_toss[i] < 0.5:
-                data = self.get_online_data(i)
-                replay_flag = False 
+            if self.replay_online_toss[i] > 0.5 and self.comoda:
+                data = self.get_comoda_data(i)
+                replay_flag = True
             else:
-                data = self.get_replay_data(i)
-                replay_flag = True 
+                # tot_samples = self.max_pretrain_frames + i 
+                # online_data_thresh = i / tot_samples 
+                online_data_thresh = 0.5
+                if self.replay_online_toss[i] > online_data_thresh:
+                    data = self.get_replay_data(i)
+                    replay_flag = True 
+                else:
+                    data = self.get_online_data(i)
+                    replay_flag = False
         else:
-            data = self.get_online_data(i)
+            data = self.get_online_data(i) 
             replay_flag = False
         return data, flag, replay_flag 
     
     def get_online_data(self, i):
         left_im = self.transforms(Image.open(self.OnlineDataset.left_ims[i]))
         right_im = self.transforms(Image.open(self.OnlineDataset.right_ims[i]))
+        return {'left_im': left_im,
+                'right_im': right_im}
+
+    def get_comoda_data(self, i):
+        i_ = self.pretrain_inds[i]
+        left_im = self.transforms(Image.open(self.PretrainDataset.left_ims[i_]))
+        right_im = self.transforms(Image.open(self.PretrainDataset.right_ims[i_]))
         return {'left_im': left_im,
                 'right_im': right_im}
         
@@ -450,8 +482,11 @@ class ReplayOnlineDataset():
         rep_r_ims = [self.replay_right_dir + x for x in os.listdir(self.replay_right_dir) if x.endswith('.png') \
             or x.endswith('.jpg')]
         assert len(rep_l_ims) == len(rep_r_ims), 'Different number of replay in left and right'
+        # tot_rep_samples = self.max_pretrain_frames + len(rep_l_ims)
+        # pretrain_replay_thresh = self.max_pretrain_frames / tot_rep_samples 
         # choosing between replay or pretrain 
-        if self.replay_pretrain_toss[i] < 0.5 and len(rep_l_ims) > 10:
+        pretrain_replay_thresh = 0.5
+        if self.replay_pretrain_toss[i] > pretrain_replay_thresh and len(rep_l_ims) > 10:
             i_ = self.replay_inds[i] % len(rep_l_ims)
             left_im = self.transforms(Image.open(rep_l_ims[i_]))
             right_im = self.transforms(Image.open(rep_r_ims[i_]))
@@ -461,6 +496,6 @@ class ReplayOnlineDataset():
             right_im = self.transforms(Image.open(self.PretrainDataset.right_ims[i_]))
         return {'left_im': left_im,
                 'right_im': right_im}
-        
+                
         
         

@@ -45,8 +45,8 @@ class EvaluateResults():
         self.eval_cat_loc = np.in1d(self.online_train_categories, self.domain_eval_categories).nonzero()[0]
         tot_train_cat = len(self.online_train_categories)
         tot_av_cat = len(self.res_curr_dist)
-        assert tot_train_cat == tot_av_cat, \
-            'Check number of models. Required: {}, Available: {}'.format(tot_train_cat, tot_av_cat)
+        # assert tot_train_cat == tot_av_cat, \
+        #    'Check number of models. Required: {}, Available: {}'.format(tot_train_cat, tot_av_cat)
 
     def curr_dist_memory(self):
         self.curr_dist_rmse = []
@@ -78,6 +78,17 @@ class EvaluateResults():
                     mem_res_domain += [np.mean(curr_model_rmse)]
         self.cross_domain_rmse = mem_res_domain 
         return self.cross_domain_rmse
+        '''mem_res_domain = []
+        for model_ind in range(1):
+            model_res = self.res_curr_dist[-1]['cat']
+            # if model_ind in self.eval_cat_loc:
+            curr_model_rmse = []
+            for category in self.domain_eval_categories:
+                curr_model_rmse += [model_res[category]]
+            mem_res_domain += [np.mean(curr_model_rmse)]
+        self.cross_domain_rmse = mem_res_domain 
+        # print(self.domain_eval_categories)
+        return self.cross_domain_rmse  '''      
 
     def pretrain_memory(self):
         mem_res = []
@@ -89,7 +100,19 @@ class EvaluateResults():
                     curr_pretrain_rmse += [model_res[category]]
                 mem_res += [np.mean(curr_pretrain_rmse)]
         self.pretrain_rmse = mem_res 
-        return self.pretrain_rmse 
+        return self.pretrain_rmse
+        '''mem_res = []
+        for model_ind in range(1):
+            model_res = self.res_curr_dist[-1]['cat']
+            # if model_ind in self.eval_cat_loc:
+            curr_pretrain_rmse = []
+            for category in self.pretrain_test_categories:
+                curr_pretrain_rmse += [model_res[category]]
+            mem_res += [np.mean(curr_pretrain_rmse)]
+            # print(self.pretrain_categories)
+        self.pretrain_rmse = mem_res 
+        return self.pretrain_rmse''' 
+
 
     def online_adaptation(self):
         adaptation_res = []
@@ -104,14 +127,14 @@ class EvaluateResults():
     def complete_evaluation(self):
         curr_dist_res = self.curr_dist_memory()[-1]
         cross_dist_res = self.cross_dist_memory()[-1]
-        online_adaptation_res = np.mean(self.online_adaptation())
-        cross_domain_res = np.mean(self.cross_domain_memory())
-        pretrain_memory_res = np.mean(self.pretrain_memory())
+        # online_adaptation_res = np.mean(self.online_adaptation())
+        # cross_domain_res = np.mean(self.cross_domain_memory())
+        # pretrain_memory_res = np.mean(self.pretrain_memory())
         return {'curr_dist': curr_dist_res,
-                'cross_dist': cross_dist_res, 
-                'cross_domain': cross_domain_res,
-                'pretrain_domain': pretrain_memory_res,
-                'online_adaptation_res': online_adaptation_res}
+                'cross_dist': cross_dist_res}
+                # 'cross_domain': cross_domain_res,
+                # 'pretrain_domain': pretrain_memory_res,
+                # 'online_adaptation_res': online_adaptation_res}
 
     def get_online_train_categories(self):
         model_names = sorted(x for x in os.listdir(self.eval_dir) if x.endswith('.pth'))

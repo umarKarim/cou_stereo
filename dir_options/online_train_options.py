@@ -7,15 +7,15 @@ class Options():
 
         # dataset related options 
         parser.add_argument('--dataset_tag', type=str, default='kitti')
-        parser.add_argument('--kitti_root', type=str, default='/hdd/local/sdb/umar/kitti_raw_256/')
-        parser.add_argument('--vkitti_root', type=str, default='/hdd/local/sdb/umar/vkitti_rgb_256/')
+        parser.add_argument('--kitti_root', type=str, default='/hdd/local/sdb/umar/codes/datasets/kitti_raw_256/')
+        parser.add_argument('--vkitti_root', type=str, default='/hdd/local/sdb/umar/codes/datasets/vkitti_rgb_256/')
         parser.add_argument('--frame_size', type=str, default='256 320')
         parser.add_argument('--kitti_online_cats', type=list, default=['kitti_residential_2', 'kitti_city', 'kitti_campus'])
         parser.add_argument('--vkitti_online_cats', type=list, default=['30-deg-left', '30-deg-right', 'overcast',
         'rain', 'sunset'])
         parser.add_argument('--cat_txt_files_root', type=str, default='dir_dataset/kitti_cat_classification/')
         parser.add_argument('--vkitti_test_perc', type=float, default=0.1)
-        parser.add_argument('--vkitti_gt_dir', type=str, default='/dataset_temp/vkitti_depth/')
+        parser.add_argument('--vkitti_gt_dir', type=str, default='/hdd/local/sdb/umar/codes/datasets/vkitti_depth/')
         parser.add_argument('--kitti_eigen_split_file', type=str, default='dir_dataset/kitti_eigen_test_split.txt')
         parser.add_argument('--runs', type=list, default=['1', '2', '3'])
         
@@ -28,6 +28,7 @@ class Options():
         parser.add_argument('--replay_model_lr', type=float, default=0.1)
         parser.add_argument('--replay_model_th', type=float, default=1.0)
         parser.add_argument('--max_replay_frames', type=int, default=20000)
+        parser.add_argument('--comoda', type=bool, default=False)
                 
         # regularization related options 
         parser.add_argument('--apply_mem_reg', type=bool, default=True)
@@ -39,9 +40,10 @@ class Options():
         parser.add_argument('--beta2', type=float, default=0.999)
 
         # network related options 
-        parser.add_argument('--disp_module', type=str, default='DispResNet')
+        # parser.add_argument('--disp_module', type=str, default='DispResNet')
         parser.add_argument('--decoder_in_channels', type=int, default=2048)
-        parser.add_argument('--disp_model_path', type=str, default='trained_models/pretrain_models/Disp_019_07439.pth')
+        parser.add_argument('--disp_model_path', type=str, default='trained_models/diffnet/pretrained_models/Disp_019_02467.pth')
+        parser.add_argument('--network', type=str, default='diffnet')
         
         # intermediate results realted options 
         parser.add_argument('--console_out', type=int, default=50)

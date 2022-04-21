@@ -9,6 +9,7 @@ from dir_dataset import Datasets
 if __name__ == '__main__':
     opts = Options().opts 
     opts.qual_results = True 
+    opts.network = 'sfml'
     
     kitti_online_model_dir = 'trained_models/online_models_kitti/'
     kitti_rep_reg_model_dir = 'trained_models/online_models_kitti_rep_reg_run3/'
