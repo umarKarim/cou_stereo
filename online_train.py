@@ -4,18 +4,17 @@ import torch.nn.functional as F
 import torchvision.utils as vutils
 import torch.utils.data as data 
 
-import importlib
 import time 
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 
 import os 
 
-from dir_dataset import Datasets 
-from Loss import Loss 
-from dir_options.online_train_options import Options
-from dir_options.pretrain_options import Options as PretrainOptions  
+from dataset.Datasets import ReplayOnlineDataset 
+from loss.Loss import Loss
+from options.pretrain_options import Options as PretrainOptions  
 from regularization import MemRegularizer 
+from networks import get_disp_network
 
 
 class OnlineTrain():
@@ -71,7 +70,7 @@ class OnlineTrain():
             os.makedirs(self.replay_right_dir)
         
         # dataloader 
-        self.dataset = Datasets.ReplayOnlineDataset(self.opts, self.pretrain_opts)
+        self.dataset = ReplayOnlineDataset(self.opts, self.pretrain_opts)
         self.DataLoader = data.DataLoader(self.dataset, batch_size=self.batch_size, shuffle=self.shuffle, 
                                           num_workers=0)
 
@@ -80,17 +79,8 @@ class OnlineTrain():
             self.device = torch.device('cpu')
         else:
             self.device = torch.device('cuda:' + str(self.gpus[0]))
-        # disp_module = importlib.import_module(self.disp_module)
-        # self.DispModel = disp_module.DispResNet().to(self.device)
-        if self.network == 'sfml':
-            from sfmlDispNet import DispResNet
-            self.DispModel = DispResNet().to(self.device)
-        elif self.network == 'diffnet':
-            from diffDispNet import DispNet 
-            self.DispModel = DispNet().to(self.device)
-        else:
-            raise ValueError('Wrong network type')
-
+        self.DispModel = get_disp_network(self.network)
+        
         if self.disp_model_path is not None:
             self.DispModel.load_state_dict(torch.load(self.disp_model_path, map_location='cpu'))
         
@@ -239,7 +229,3 @@ class OnlineTrain():
             print('Model saved')
 
 
-
-if __name__ == '__main__':
-    Opts = Options()
-    OnlineDepth = OnlineTrain(Opts.opts)

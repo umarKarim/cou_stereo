@@ -1,11 +1,9 @@
 from test import TestFaster
-import matplotlib.pyplot as plt 
 import os 
 import numpy as np
-import time 
-from dir_dataset import Datasets 
+from dataset.Datasets import KittiTestDataset
+from dataset.Datasets import VkittiTestDataset 
 import torch.utils.data as data 
-
 
 
 class EvalDirectory():
@@ -24,8 +22,8 @@ class EvalDirectory():
         self.metrics = ['rmse', 'log_rmse', 'abs_rel', 'sq_rel', 'del_125', 'del_125_2']
         
         # dataloader 
-        kitti_dataset = Datasets.KittiTestDataset(self.opts)
-        vkitti_dataset = Datasets.VkittiTestDataset(self.opts)
+        kitti_dataset = KittiTestDataset(self.opts)
+        vkitti_dataset = VkittiTestDataset(self.opts)
         self.KittiDataLoader = data.DataLoader(kitti_dataset, batch_size=self.batch_size, shuffle=False, 
                                             num_workers=8, pin_memory=True)
         self.VkittiDataLoader = data.DataLoader(vkitti_dataset, batch_size=self.batch_size, shuffle=False, 
@@ -73,8 +71,3 @@ class EvalDirectory():
                 res_dict[metric].append(metric_dict)
         return res_dict
         
-
-
-if __name__ == '__main__':
-    opts = Options().opts 
-    EvalDirectory(opts)

@@ -3,15 +3,15 @@ import torch.nn as nn
 import torch.nn.functional as F 
 import numpy as np 
 import torchvision 
-import importlib 
-from dir_options.test_options import Options 
-from dir_dataset import Datasets
 import torch.utils.data as data 
 import matplotlib.pyplot as plt 
 import os 
 import cv2
 import matplotlib.pyplot as plt 
-    
+
+from options.test_options import Options 
+from dataset.Datasets import KittiTestDataset, VkittiTestDataset
+from networks import get_disp_network
     
     
 class TestFaster(): 
@@ -32,9 +32,9 @@ class TestFaster():
         # getting the dataloader ready 
         if dataloader == None:
             if self.dataset_tag == 'kitti':
-                dataset = Datasets.KittiTestDataset(self.opts)
+                dataset = KittiTestDataset(self.opts)
             elif self.dataset_tag == 'vkitti':
-                dataset = Datasets.VkittiTestDataset(self.opts)
+                dataset = VkittiTestDataset(self.opts)
             else:
                 raise NameError('Dataset not found')
             self.DataLoader = data.DataLoader(dataset, batch_size=self.batch_size, shuffle=False, 
@@ -49,19 +49,9 @@ class TestFaster():
             self.max_depth = opts.vkitti_max_depth 
             self.output_dir = opts.vkitti_test_output_dir
         os.makedirs(self.output_dir, exist_ok=True)
-        
-        # loading the model 
-        # disp_module = importlib.import_module(self.disp_module)
-        # self.DispNet = disp_module.DispResNet()
-        if self.network == 'sfml':
-            from sfmlDispNet import DispResNet
-            self.DispNet = DispResNet()
-        elif self.network == 'diffnet':
-            from diffDispNet import DispNet 
-            self.DispNet = DispNet()
-        else:
-            raise ValueError('Wrong network type')
 
+        self.DispNet = get_disp_network(self.network)
+        
         self.DispNet.load_state_dict(torch.load(self.model_path))
         if self.gpu_id is not None:
             self.device = torch.device('cuda:' + str(self.gpu_id[0]))

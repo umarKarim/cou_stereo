@@ -1,25 +1,13 @@
-from evaluation import EvaluateResults 
-from dir_options.test_options import Options 
-# from dir_options.pretrain_options import Options as OptionsPretrain
-
+from evaluate.evaluation import EvaluateResults 
+from options.test_options import Options 
 import numpy as np 
-# import pandas as pd
 
 def correct_results(results, opts):
-    tag = opts.dataset_tag 
-    eval_metric = opts.eval_metric
     curr_dist_res = results['curr_dist']
     cross_dist_res = results['cross_dist']
-    # cross_domain_res = np.mean((results['pretrain_domain'], results['cross_domain']))
-    # cross_domain_res = results['cross_domain']
-    # online_res = results['online_adaptation_res']
-    # cross_domain_res = results['pretrain_domain']
-    # online_res = results['cross_domain']
-
+    
     res_dict = {'Curr dist': curr_dist_res,
                 'Cross_dist': cross_dist_res}
-                # 'Online': online_res,
-                # 'Cross domain': cross_domain_res}
     return res_dict
     
 def eval_function(opts):
@@ -81,22 +69,11 @@ if __name__ == '__main__':
     list_results_dir_kitti = ['results/{}/online_test_loss/kitti_online_ft/'.format(net)]    
     list_results_dir_vkitti = ['results/{}/online_test_loss/vkitti_online_ft/'.format(net)]
     
-    list_eval_dir_kitti.append('trained_models/{}/online_models_kitti_none/'.format(net))
-    list_eval_dir_vkitti.append('trained_models/{}/online_models_vkitti_none/'.format(net))
-    list_results_dir_kitti.append('results/{}/none_test_loss/kitti_online/'.format(net))
-    list_results_dir_vkitti.append('results/{}/none_test_loss/vkitti_online/'.format(net))
-
     for run in runs:
         list_eval_dir_kitti.append('trained_models/{}/online_models_kitti_prop_run'.format(net) + run + '/')
         list_eval_dir_vkitti.append('trained_models/{}/online_models_vkitti_prop_run'.format(net) + run + '/')
         list_results_dir_kitti.append('results/{}/prop_test_loss_run'.format(net) + run + '/kitti_online/')
         list_results_dir_vkitti.append('results/{}/prop_test_loss_run'.format(net) + run + '/vkitti_online/')
-    
-    for run in runs:
-        list_eval_dir_kitti.append('trained_models/{}/online_models_kitti_comoda_run'.format(net) + run + '/')
-        list_eval_dir_vkitti.append('trained_models/{}/online_models_vkitti_comoda_run'.format(net) + run + '/')
-        list_results_dir_kitti.append('results/{}/comoda_test_loss_run'.format(net) + run + '/kitti_online/')
-        list_results_dir_vkitti.append('results/{}/comoda_test_loss_run'.format(net) + run + '/vkitti_online/')
     
     assert len(list_eval_dir_kitti) == \
         len(list_eval_dir_vkitti) == \
@@ -122,44 +99,25 @@ if __name__ == '__main__':
         # print('Got the results')
         tot_runs = len(runs)
         kitti_ft = kitti_res[0]
-        kitti_none = kitti_res[1]
-        kitti_prop_runs = kitti_res[2:2 + tot_runs]
-        kitti_comoda_runs = kitti_res[2 + tot_runs: 2 + tot_runs + tot_runs]
+        kitti_prop_runs = kitti_res[1:1 + tot_runs]
         vkitti_ft = vkitti_res[0]
-        vkitti_none = vkitti_res[1]
-        vkitti_prop_runs = vkitti_res[2:2 + tot_runs]
-        vkitti_comoda_runs = vkitti_res[2 + tot_runs: 2 + tot_runs + tot_runs]
+        vkitti_prop_runs = vkitti_res[1:1 + tot_runs]
         
         mean_arr = []
         std_arr = []
         mean, std = get_mean_std_ft(kitti_ft)
         mean_arr.append(mean)
         std_arr.append(std)
-        mean, std = get_mean_std_ft(kitti_none)
-        mean_arr.append(mean)
-        std_arr.append(std)
         mean, std = get_mean_std(kitti_prop_runs)
         mean_arr.append(mean)
         std_arr.append(std)
-        mean, std = get_mean_std(kitti_comoda_runs)
-        mean_arr.append(mean)
-        std_arr.append(std)
-        # print('Gathered KITTI results')
-
+        
         mean, std = get_mean_std_ft(vkitti_ft)
-        mean_arr.append(mean)
-        std_arr.append(std)
-        mean, std = get_mean_std_ft(vkitti_none)
         mean_arr.append(mean)
         std_arr.append(std)
         mean, std = get_mean_std(vkitti_prop_runs)
         mean_arr.append(mean)
-        std_arr.append(std)
-        mean, std = get_mean_std(vkitti_comoda_runs)
-        mean_arr.append(mean)
-        std_arr.append(std)
-        # print('Gathered VKITTI results')
-
+        std_arr.append(std)        
         
         print('Results for {}'.format(curr_metric))
         display_latex_style_w_std(mean_arr, std_arr)
